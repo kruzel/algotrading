@@ -45,6 +45,8 @@ class CHLLoss(nn.Module):
 
         loss = MSE + loss_HC + loss_LC
 
+        #print(MSE.item(), loss_LC.item(), loss_HC.item())
+
         return loss
 
 def prepare_dataframe_for_lstm_with_date(df, n_steps):
