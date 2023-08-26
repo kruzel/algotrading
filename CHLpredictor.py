@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from copy import deepcopy as dc
+import numpy as np
 
 class CHLpredictor(nn.Module):
 
@@ -13,9 +14,7 @@ class CHLpredictor(nn.Module):
                             batch_first=True)
 
         self.fc = nn.Linear(hidden_size, out_features)
-        self.learning_rate = 0.001
-        self.loss_function = nn.MSELoss()
-        self.optimizer = torch.optim.Adam(self.lstm.parameters(), lr=self.learning_rate)
+
         self.device = device
         self.lstm.to(self.device)
 
@@ -29,6 +28,24 @@ class CHLpredictor(nn.Module):
         return out
 
 
+class CHLLoss(nn.Module):
+    def __init__(self):
+        super(CHLLoss, self).__init__()
+
+    def forward(self, inputs, targets):
+        MSE = torch.pow(torch.mean(targets - inputs), 2)
+
+        loss_LC = inputs[0] - inputs[1] # close - low
+        loss_LC[loss_LC>0] = 0
+        loss_LC = torch.pow(loss_LC.mean(), 2)
+
+        loss_HC = inputs[2] - inputs[0]  # high - close
+        loss_HC[loss_HC > 0] = 0
+        loss_HC = torch.pow(loss_HC.mean(), 2)
+
+        loss = MSE + loss_HC + loss_LC
+
+        return loss
 
 def prepare_dataframe_for_lstm_with_date(df, n_steps):
     df = dc(df)
